@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
@@ -121,7 +121,6 @@ const formatPercent = (value: number, total = 7) => {
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  // URL de tu logo actualizada
   const logoUrl = "https://aliadohumano.com/wp-content/uploads/2026/02/Logo-inteligencia-emocional-aplicada.png"; 
 
   return (
@@ -265,8 +264,8 @@ export default function App() {
                   <thead className="bg-slate-100 text-slate-800 uppercase text-xs font-semibold">
                     <tr>
                       <th className="px-6 py-4 w-1/3">Pregunta / Módulo</th>
-                      <th className="px-6 py-4 text-center border-l border-white bg-blue-100/50 text-[#1E3A8A]" colSpan="5">Grupo 1 (7 Respuestas)</th>
-                      <th className="px-6 py-4 text-center border-l border-white bg-red-100/50 text-[#B91C1C]" colSpan="5">Grupo 2 (7 Respuestas)</th>
+                      <th className="px-6 py-4 text-center border-l border-white bg-blue-100/50 text-[#1E3A8A]" colSpan={5}>Grupo 1 (7 Respuestas)</th>
+                      <th className="px-6 py-4 text-center border-l border-white bg-red-100/50 text-[#B91C1C]" colSpan={5}>Grupo 2 (7 Respuestas)</th>
                     </tr>
                     <tr className="border-b border-slate-200">
                       <th className="px-6 py-2 bg-white"></th>
