@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
-  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  AreaChart, Area, PieChart, Pie, Cell
 } from 'recharts';
 import { 
   Users, Award, BarChart3, MessageSquare, Target, Activity, Brain, Lightbulb, Star
@@ -35,6 +36,22 @@ const generalStatsData = [
   { question: 'Q1. Utilidad', G1: 4.57, G2: 4.14, full: '¿Cuán útil te ha resultado este taller?' },
   { question: 'Q2. Recomendación', G1: 4.57, G2: 4.14, full: '¿Cuánto lo recomendarías?' },
   { question: 'Q7. Tareas', G1: 3.71, G2: 3.29, full: '¿Cómo te has sentido al realizar las tareas?' },
+];
+
+// Datos de Distribución de la nota final (Área)
+const distributionData = [
+  { nota: '1 a 6', G1: 0, G2: 0 },
+  { nota: 'Nota 7', G1: 0, G2: 2 },
+  { nota: 'Nota 8', G1: 1, G2: 2 },
+  { nota: 'Nota 9', G1: 4, G2: 2 },
+  { nota: 'Nota 10', G1: 2, G2: 1 },
+];
+
+// Datos para el gráfico NPS (Net Promoter Score)
+const npsData = [
+  { name: 'Promotores (9-10)', value: 9, color: '#10B981' }, // Verde esmeralda
+  { name: 'Neutros (7-8)', value: 5, color: '#F59E0B' }, // Ámbar
+  { name: 'Detractores (1-6)', value: 0, color: '#EF4444' }, // Rojo (0)
 ];
 
 const rawQuestionData: RawQuestionData[] = [
@@ -100,9 +117,34 @@ const feedbackData = {
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
-    // Detectamos si es el gráfico de radar (base 10) o el de barras (base 5)
     const isRadarChart = payload[0].payload.subject !== undefined;
     const maxScore = isRadarChart ? 10 : 5;
+
+    // Si es el gráfico NPS o de área, mostramos el formato normal
+    if (payload[0].name === 'Promotores (9-10)' || payload[0].name === 'Neutros (7-8)' || payload[0].name === 'Detractores (1-6)') {
+      return (
+        <div className="bg-white p-4 border border-slate-200 shadow-xl rounded-lg">
+          <p className="font-semibold text-slate-800 mb-1">{payload[0].name}</p>
+          <p style={{ color: payload[0].payload.color }} className="text-sm font-bold">
+            {payload[0].value} participantes
+          </p>
+        </div>
+      );
+    }
+    
+    // Si es el gráfico de área (G1 y G2)
+    if (payload[0].name === 'Grupo 1' && !isRadarChart && !payload[0].payload.question) {
+       return (
+        <div className="bg-white p-4 border border-slate-200 shadow-xl rounded-lg">
+          <p className="font-semibold text-slate-800 mb-2">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} style={{ color: entry.color }} className="text-sm font-medium">
+              {entry.name}: {entry.value} persona(s)
+            </p>
+          ))}
+        </div>
+      );
+    }
 
     return (
       <div className="bg-white p-4 border border-slate-200 shadow-xl rounded-lg">
@@ -226,6 +268,74 @@ export default function App() {
               </div>
             </div>
 
+            {/* SECCIÓN NUEVA: GRÁFICOS EJECUTIVOS */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              
+              {/* Gráfico 1: NPS (Métrica Ejecutiva) */}
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                <h3 className="text-lg font-semibold text-slate-800 mb-2">Índice de Excelencia (NPS)</h3>
+                <p className="text-sm text-slate-500 mb-6">Basado en la nota global (0% Detractores)</p>
+                <div className="h-64 w-full relative">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={npsData}
+                        cx="50%"
+                        cy="80%"
+                        startAngle={180}
+                        endAngle={0}
+                        innerRadius={80}
+                        outerRadius={110}
+                        paddingAngle={2}
+                        dataKey="value"
+                      >
+                        {npsData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip content={<CustomTooltip />} />
+                      <Legend verticalAlign="bottom" height={36}/>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  {/* Texto central del semicírculo */}
+                  <div className="absolute top-[60%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                    <p className="text-3xl font-black text-emerald-500">64%</p>
+                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">NPS Score</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Gráfico 2: Curva de Satisfacción (Área) */}
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                <h3 className="text-lg font-semibold text-slate-800 mb-2">Curva de Satisfacción (Nota Final)</h3>
+                <p className="text-sm text-slate-500 mb-6">Acumulación de votos en el tramo de sobresaliente</p>
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={distributionData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorG1" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#1E3A8A" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#1E3A8A" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="colorG2" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#B91C1C" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#B91C1C" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="nota" tick={{ fill: '#475569', fontSize: 12 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: '#475569' }} axisLine={false} tickLine={false} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <RechartsTooltip content={<CustomTooltip />} />
+                      <Legend verticalAlign="bottom" height={36}/>
+                      <Area type="monotone" dataKey="G1" name="Grupo 1" stroke="#1E3A8A" strokeWidth={3} fillOpacity={1} fill="url(#colorG1)" />
+                      <Area type="monotone" dataKey="G2" name="Grupo 2" stroke="#B91C1C" strokeWidth={3} fillOpacity={1} fill="url(#colorG2)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
+            {/* GRÁFICOS ORIGINALES */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
                 <h3 className="text-lg font-semibold text-slate-800 mb-6">Comparativa por Módulos (Base 10)</h3>
