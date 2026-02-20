@@ -4,7 +4,7 @@ import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from 'recharts';
 import { 
-  Users, Award, BarChart3, MessageSquare, Target, Activity, Brain, Lightbulb
+  Users, Award, BarChart3, MessageSquare, Target, Activity, Brain, Lightbulb, Star
 } from 'lucide-react';
 
 // --- DEFINICIONES DE TYPESCRIPT PARA EVITAR ERRORES EN VERCEL ---
@@ -23,11 +23,12 @@ const kpis = {
   g2: { matriculados: 12, respuestas: 7, notaMedia: 8.29 },
 };
 
+// Radar chart convertido a base 10 (multiplicado por 2)
 const radarData = [
-  { subject: 'Módulo 1', G1: 3.86, G2: 3.71, full: 'Módulo 1: Introducción a las emociones' },
-  { subject: 'Módulo 2', G1: 3.86, G2: 3.86, full: 'Módulo 2: Emociones básicas' },
-  { subject: 'Módulo 3', G1: 4.43, G2: 3.57, full: 'Módulo 3: Sentimientos y comunicación' },
-  { subject: 'Módulo 4', G1: 4.57, G2: 4.43, full: 'Módulo 4: Reuniones y negociación' },
+  { subject: 'Módulo 1', G1: 7.72, G2: 7.42, full: 'Módulo 1: Introducción a las emociones' },
+  { subject: 'Módulo 2', G1: 7.72, G2: 7.72, full: 'Módulo 2: Emociones básicas' },
+  { subject: 'Módulo 3', G1: 8.86, G2: 7.14, full: 'Módulo 3: Sentimientos y comunicación' },
+  { subject: 'Módulo 4', G1: 9.14, G2: 8.86, full: 'Módulo 4: Reuniones y negociación' },
 ];
 
 const generalStatsData = [
@@ -99,12 +100,16 @@ const feedbackData = {
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
+    // Detectamos si es el gráfico de radar (base 10) o el de barras (base 5)
+    const isRadarChart = payload[0].payload.subject !== undefined;
+    const maxScore = isRadarChart ? 10 : 5;
+
     return (
       <div className="bg-white p-4 border border-slate-200 shadow-xl rounded-lg">
         <p className="font-semibold text-slate-800 mb-2">{label}</p>
         {payload.map((entry: any, index: number) => (
           <p key={index} style={{ color: entry.color }} className="text-sm font-medium">
-            {entry.name}: {entry.value.toFixed(2)} / 5
+            {entry.name}: {entry.value.toFixed(2)} / {maxScore}
           </p>
         ))}
       </div>
@@ -113,15 +118,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const formatPercent = (value: number, total = 7) => {
-  if (value === 0) return '0%';
-  return ((value / total) * 100).toFixed(1).replace('.0', '') + '%';
-};
-
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
-
   const logoUrl = "https://aliadohumano.com/wp-content/uploads/2026/02/Logo-inteligencia-emocional-aplicada.png"; 
+
+  // Cálculo de la nota media global
+  const notaGlobal = ((kpis.g1.notaMedia + kpis.g2.notaMedia) / 2).toFixed(2);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans text-slate-800">
@@ -176,8 +178,19 @@ export default function App() {
         {/* --- PESTAÑA 1: DASHBOARD --- */}
         {activeTab === 'dashboard' && (
           <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="bg-blue-50 border-l-4 border-[#1E3A8A] p-4 rounded-r-lg text-sm text-blue-900">
-              <p><strong>Nota metodológica:</strong> Los promedios del Grupo 1 incluyen al 7º participante (nota máxima en todo), integrando así el 100% de las respuestas recibidas (7 de 16).</p>
+            
+            {/* Tarjeta de Nota Media Global */}
+            <div className="bg-gradient-to-r from-[#1E3A8A] to-[#3b82f6] p-6 sm:p-8 rounded-2xl shadow-md text-white flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 font-medium text-sm uppercase tracking-wider mb-1">Nota Media Global del Taller</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-5xl font-extrabold">{notaGlobal}</span>
+                  <span className="text-2xl text-blue-200 font-medium">/ 10</span>
+                </div>
+              </div>
+              <div className="p-4 bg-white/10 rounded-full backdrop-blur-md border border-white/20 hidden sm:block">
+                <Star className="w-10 h-10 text-yellow-300 fill-yellow-300" />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -215,13 +228,13 @@ export default function App() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                <h3 className="text-lg font-semibold text-slate-800 mb-6">Comparativa por Módulos (Promedios 1-5)</h3>
+                <h3 className="text-lg font-semibold text-slate-800 mb-6">Comparativa por Módulos (Base 10)</h3>
                 <div className="h-80 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
                       <PolarGrid stroke="#e2e8f0" />
                       <PolarAngleAxis dataKey="subject" tick={{ fill: '#475569', fontSize: 12, fontWeight: 500 }} />
-                      <PolarRadiusAxis angle={30} domain={[0, 5]} tick={{ fill: '#94a3b8' }} />
+                      <PolarRadiusAxis angle={30} domain={[0, 10]} tick={{ fill: '#94a3b8' }} />
                       <Radar name="Grupo 1" dataKey="G1" stroke="#1E3A8A" fill="#1E3A8A" fillOpacity={0.4} />
                       <Radar name="Grupo 2" dataKey="G2" stroke="#B91C1C" fill="#B91C1C" fillOpacity={0.4} />
                       <Legend wrapperStyle={{ paddingTop: '20px' }}/>
@@ -257,7 +270,7 @@ export default function App() {
             <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
               <div className="p-6 border-b border-slate-100 bg-slate-50">
                 <h2 className="text-xl font-bold text-[#1E3A8A]">Desglose de Puntuaciones (Escala 1 al 5)</h2>
-                <p className="text-sm text-slate-500 mt-1">Porcentaje de respuestas por cada opción (sobre 7 participantes por grupo).</p>
+                <p className="text-sm text-slate-500 mt-1">Número exacto de respuestas por cada opción.</p>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm text-slate-600">
@@ -287,12 +300,12 @@ export default function App() {
                         <td className="px-6 py-4 font-medium text-slate-800">{row.title}</td>
                         {[1,2,3,4,5].map(val => (
                           <td key={`g1-${val}`} className={`px-2 py-4 text-center ${row.g1[val] > 0 ? 'font-semibold text-slate-800' : 'text-slate-300'}`}>
-                            {row.g1[val] > 0 ? formatPercent(row.g1[val]) : '0%'}
+                            {row.g1[val] > 0 ? row.g1[val] : '0'}
                           </td>
                         ))}
                         {[1,2,3,4,5].map(val => (
                           <td key={`g2-${val}`} className={`px-2 py-4 text-center border-l border-slate-100 ${row.g2[val] > 0 ? 'font-semibold text-slate-800' : 'text-slate-300'}`}>
-                            {row.g2[val] > 0 ? formatPercent(row.g2[val]) : '0%'}
+                            {row.g2[val] > 0 ? row.g2[val] : '0'}
                           </td>
                         ))}
                       </tr>
@@ -321,7 +334,7 @@ export default function App() {
                       <td className="px-6 py-4 font-bold text-[#1E3A8A]">Grupo 1</td>
                       {[1,2,3,4,5,6,7,8,9,10].map(val => (
                         <td key={`q10-g1-${val}`} className={`px-2 py-4 text-center ${q10Data.g1[val] > 0 ? 'font-bold text-[#1E3A8A] bg-blue-50 rounded' : 'text-slate-300'}`}>
-                          {q10Data.g1[val] > 0 ? formatPercent(q10Data.g1[val]) : '0%'}
+                          {q10Data.g1[val] > 0 ? q10Data.g1[val] : '0'}
                         </td>
                       ))}
                     </tr>
@@ -329,7 +342,7 @@ export default function App() {
                       <td className="px-6 py-4 font-bold text-[#B91C1C]">Grupo 2</td>
                       {[1,2,3,4,5,6,7,8,9,10].map(val => (
                         <td key={`q10-g2-${val}`} className={`px-2 py-4 text-center ${q10Data.g2[val] > 0 ? 'font-bold text-[#B91C1C] bg-red-50 rounded' : 'text-slate-300'}`}>
-                          {q10Data.g2[val] > 0 ? formatPercent(q10Data.g2[val]) : '0%'}
+                          {q10Data.g2[val] > 0 ? q10Data.g2[val] : '0'}
                         </td>
                       ))}
                     </tr>
